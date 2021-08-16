@@ -27,8 +27,8 @@ python server.py --port 8080
 
 The `server.py` script exposes an HTTP server that responds to POST requests.
 
-There are two types of endpoints: *single* endpoints that take a single (lat, lon) point as input, and *batched* endpoints that take a list of (lat, lon) points as input.
-More specifically, *single* endpoints expect JSON arguments in the form:
+There are two types of endpoints: **single** endpoints that take a single (_lat_, _lon_) point as input, and **batched** endpoints that take a list of (_lat_, _lon_) points as input.
+More specifically, **single** endpoints expect JSON arguments in the form:
 ```
 {
     "latitude": latitude,
@@ -36,7 +36,7 @@ More specifically, *single* endpoints expect JSON arguments in the form:
 }
 ```
 
-while *batched* endpoints expect JSON arguments in the format:
+while **batched** endpoints expect JSON arguments in the format:
 ```
 {
     "latitudes": [latitude_0, ..., latitude_n],
@@ -45,8 +45,8 @@ while *batched* endpoints expect JSON arguments in the format:
 ```
 
 Both types of endpoints return the same JSON input object with an additional `features` key.
-In the *single* type, this is a list of size 1024 containing a feature representation computed by RCF.
-In the *batched* type, this is a nested list of size (n, 1024) containing a feature representation computed by RCF for each point.
+In the **single** type, this is a list of size _1024_ containing a feature representation computed by RCF.
+In the **batched** type, this is a nested list of size (_n_, _1024_) containing a feature representation computed by RCF for each point.
 
 
 Currently there are three total endpoints:
