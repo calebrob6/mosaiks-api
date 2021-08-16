@@ -37,10 +37,12 @@ More specifically, *single* endpoints expect JSON arguments in the form:
 ```
 
 while *batched* endpoints expect JSON arguments in the format:
+```
 {
     "latitudes": [latitude_0, ..., latitude_n],
     "longitudes": [longitude_0, ..., longitude_n]
 }
+```
 
 Both types of endpoints return the same JSON input object with an additional `features` key.
 In the *single* type, this is a list of size 1024 containing a feature representation computed by RCF.
