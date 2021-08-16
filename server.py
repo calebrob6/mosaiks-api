@@ -24,15 +24,21 @@ import shapely.geometry
 
 from dataloaders import CustomNAIPDataset
 from models import RCF, featurize
+
 from NAIPTileIndex import NAIPTileIndex
+from pystac_client import Client
+import planetary_computer as pc
+from pystac.extensions.eo import EOExtension as eo
+
 
 DEVICE = torch.device("cpu")
 INDEX = NAIPTileIndex(base_path="tmp/")
 BUFFER_DISTANCE = 250  # in meters
 NUM_FEATURES = 1024
-MODEL = RCF(NUM_FEATURES).eval().to(DEVICE)
-
+MODEL = RCF(NUM_FEATURES, num_channels=3).eval().to(DEVICE)
+CATALOG = Client.open("https://planetarycomputer.microsoft.com/api/stac/v1")
 MAX_BATCH_SIZE = 1000
+
 
 def enable_cors():
     """From https://gist.github.com/richard-flosi/3789163
@@ -177,6 +183,63 @@ def featurize_naip_single():
 
         out_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True)
 
+    features = featurize(out_image[:3,:,:], MODEL, DEVICE)
+
+    data["features"] = features.tolist()
+
+    bottle.response.status = 200
+    return json.dumps(data)
+
+
+def featurize_sentinel2_single():
+    bottle.response.content_type = "application/json"
+    data = bottle.request.json
+
+    if "latitude" not in data:
+        bottle.response.status = 500
+        return json.dumps({
+            "message": "'latitude' is a required parameter but wasn't sent"}
+        )
+    if "longitude" not in data:
+        bottle.response.status = 500
+        return json.dumps({
+            "message": "'longitude' is a required parameter but wasn't sent"}
+        )
+
+    lat, lon = None, None
+    lat = data["latitude"]
+    lon = data["longitude"]
+
+    print(f"Featurizing ({lat}, {lon})")
+
+    point_geom = shapely.geometry.mapping(
+        shapely.geometry.Point(lon, lat)
+    )
+
+    # Search the planetary computer
+    search_start="2018-01-01"
+    search_end="2018-12-31"
+    search = CATALOG.search(
+        collections=["sentinel-2-l2a"],
+        intersects=point_geom,
+        datetime=f"{search_start}/{search_end}",
+        query={"eo:cloud_cover": {"lt": 5}},
+    )
+    items = list(search.get_items())
+    least_cloudy_item = sorted(items, key=lambda item: eo.ext(item).cloud_cover)[0]
+
+    href = least_cloudy_item.assets["visual"].href
+    signed_href = pc.sign(href)
+
+    with rasterio.open(signed_href) as f:
+        point_geom = rasterio.warp.transform_geom("epsg:4326", f.crs.to_string(), point_geom)
+        point_shape = shapely.geometry.shape(point_geom)
+
+        mask_shape = point_shape.buffer(BUFFER_DISTANCE).envelope
+        mask_geom = shapely.geometry.mapping(mask_shape)
+
+        out_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True)
+
     features = featurize(out_image, MODEL, DEVICE)
 
     data["features"] = features.tolist()
@@ -221,6 +284,9 @@ def main():
 
     app.route("/featurizeNAIPSingle", method="OPTIONS", callback=do_options)
     app.route("/featurizeNAIPSingle", method="POST", callback=featurize_naip_single)
+
+    app.route("/featurizeSentinel2Single", method="OPTIONS", callback=do_options)
+    app.route("/featurizeSentinel2Single", method="POST", callback=featurize_sentinel2_single)
 
     app.route("/featurizeNAIPBatched", method="OPTIONS", callback=do_options)
     app.route("/featurizeNAIPBatched", method="POST", callback=featurize_naip_batched)

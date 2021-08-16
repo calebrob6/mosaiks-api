@@ -33,6 +33,6 @@ class CustomNAIPDataset(Dataset):
                 mask_geom = shapely.geometry.mapping(mask_shape)
                 out_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True)
 
-        out_image = (out_image / 255.0)
+        out_image = (out_image[:3,:,:] / 255.0)
         out_image = torch.from_numpy(out_image).float()
         return out_image
