@@ -27,7 +27,8 @@ python server.py --port 8080
 
 The `server.py` script exposes an HTTP server that responds to POST requests.
 
-There is a single endpoint, `/featurizeSingle`, that expects input in the format:
+There are two types of endpoints: *single* endpoints that take a single (lat, lon) point as input, and *batched* endpoints that take a list of (lat, lon) points as input.
+More specifically, *single* endpoints expect JSON arguments in the form:
 ```
 {
     "latitude": latitude,
@@ -35,7 +36,22 @@ There is a single endpoint, `/featurizeSingle`, that expects input in the format
 }
 ```
 
-and returns the same JSON object with an additional `features` key that contains a 1024 length array that is the feature representation computed by RCF.
+while *batched* endpoints expect JSON arguments in the format:
+{
+    "latitudes": [latitude_0, ..., latitude_n],
+    "longitudes": [longitude_0, ..., longitude_n]
+}
+
+Both types of endpoints return the same JSON input object with an additional `features` key.
+In the *single* type, this is a list of size 1024 containing a feature representation computed by RCF.
+In the *batched* type, this is a nested list of size (n, 1024) containing a feature representation computed by RCF for each point.
+
+
+Currently there are three total endpoints:
+- `/featurizeNAIPSingle`
+- `/featurizeSentinel2Single`
+- `/featurizeNAIPBatched`
+
 
 ### Examples
 
@@ -45,3 +61,14 @@ See examples of how to query the API at `notebooks/Demo notebook.ipynb`.
 ## Data
 
 The CSV files in `data/` were downloaded from the [MOSAIKS Code Ocean capsule](https://codeocean.com/capsule/6456296/tree/v2) from `data/int/applications/*/`.
+
+
+## To-dos
+
+- [ ] The NAIP endpoints should use the STAC API from the planetary computer
+    - [ ] The endpoints should all take time dimensions
+- [ ] The endpoints should all take buffer size as a parameter and we should double check the units
+- [ ] Logging needs to happen in a way that makes sense
+- [ ] Models should be instantiated with a seed parameter such that results are reproducible
+- [ ] There should be a model that takes 4 channel inputs and model that takes 3 channel inputs
+- [ ] What happens if two requests come in and both want to use the model at the same time?
