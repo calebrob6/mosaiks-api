@@ -74,3 +74,5 @@ The CSV files in `data/` were downloaded from the [MOSAIKS Code Ocean capsule](h
 - [ ] Models should be instantiated with a seed parameter such that results are reproducible
 - [ ] There should be a model that takes 4 channel inputs and model that takes 3 channel inputs
 - [ ] What happens if two requests come in and both want to use the model at the same time?
+- [ ] Example of how to set a planetary computer subscription key
+- [ ] Factor out the data loading into an interface similar to https://github.com/microsoft/temporal-cluster-matching/blob/main/temporal_cluster_matching/DataInterface.py
