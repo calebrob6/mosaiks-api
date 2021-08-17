@@ -4,6 +4,12 @@ The Multi-task Observation using Satellite Imagery & Kitchen Sinks (**MOSAIKS**)
 
 In this repository we implement an API that will compute MOSAIKS features over NAIP aerial imagery, or Sentinel 2 satellite imagery given a query (latitude, longitude) point. This enables users that have datasets with geospatial points and corresponding labels to quickly generate corresponding satellite imagery based feature representations to assist in modeling tasks.
 
+<p align="center">
+    <img src="figures/pop_weighted_population.png" width="400px"><br/>
+    <b>Figure 1. </b>Results of estimating population of 1km^2 patches using a ridge regression model and MOSAIKS features. 
+</p>
+
+
 ## Setup
 
 ```
